@@ -1,0 +1,17 @@
+[gd_scene load_steps=3 format=3 uid="uid://b0urqwxpinjmo"]
+
+[ext_resource type="Script" path="res://Camera2D.gd" id="1_6fceo"]
+[ext_resource type="PackedScene" uid="uid://ce2ll6t0o6kac" path="res://block_like/production_line_2d/production_line.tscn" id="2_frdb5"]
+
+[node name="Main" type="Node2D"]
+
+[node name="Camera2D" type="Camera2D" parent="."]
+script = ExtResource("1_6fceo")
+
+[node name="ProductionLine" parent="." instance=ExtResource("2_frdb5")]
+
+[node name="ProductionLine2" parent="." instance=ExtResource("2_frdb5")]
+position = Vector2(-47, 18)
+
+[node name="ProductionLine3" parent="." instance=ExtResource("2_frdb5")]
+position = Vector2(16, 16)
