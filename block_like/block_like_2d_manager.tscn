@@ -1,19 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://dvfl3q1pi8r7g"]
+[gd_scene load_steps=2 format=3 uid="uid://dvfl3q1pi8r7g"]
 
 [ext_resource type="Script" path="res://block_like/block_like_2d_manager.gd" id="1_74m7q"]
-[ext_resource type="PackedScene" uid="uid://ce2ll6t0o6kac" path="res://block_like/production_line_2d/production_line.tscn" id="2_3fsyj"]
 
 [node name="BlockLike2DManager" type="Node2D"]
 script = ExtResource("1_74m7q")
-
-[node name="ProductionLine" parent="." instance=ExtResource("2_3fsyj")]
-position = Vector2(226, 159)
-scale = Vector2(8, 8)
-
-[node name="ProductionLine2" parent="." instance=ExtResource("2_3fsyj")]
-position = Vector2(400, 163)
-scale = Vector2(8, 8)
-
-[node name="ProductionLine3" parent="." instance=ExtResource("2_3fsyj")]
-position = Vector2(564, 171)
-scale = Vector2(8, 8)

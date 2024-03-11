@@ -1,13 +1,11 @@
-"
-任何一個
-"
 class_name BlockLike2D
 extends Node2D
 
+
 const BLOCK_SIZE = 16
 
-var block_area: Area2D
 
+var block_area: Area2D
 var is_able_to_be_placed := true:
 	set(value):
 		is_able_to_be_placed = value
@@ -43,6 +41,7 @@ var is_mouse_entered := false
 var picked_up_global_mouse_pos: Vector2
 var previous_position: Vector2
 
+
 func _ready():
 	# block_area
 	var rect = RectangleShape2D.new()
@@ -62,10 +61,12 @@ func _ready():
 	previous_position = position
 
 
+@warning_ignore("unused_parameter")
 func _on_block_area_area_entered(area: Area2D):
 	is_able_to_be_placed = false
 
 
+@warning_ignore("unused_parameter")
 func _on_block_area_area_exited(area: Area2D):
 	is_able_to_be_placed = true
 

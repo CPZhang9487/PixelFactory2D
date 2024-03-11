@@ -1,17 +1,20 @@
-[gd_scene load_steps=3 format=3 uid="uid://b0urqwxpinjmo"]
+[gd_scene load_steps=4 format=3 uid="uid://b0urqwxpinjmo"]
 
-[ext_resource type="Script" path="res://Camera2D.gd" id="1_6fceo"]
+[ext_resource type="Script" path="res://main_camera.gd" id="1_6fceo"]
+[ext_resource type="PackedScene" uid="uid://dvfl3q1pi8r7g" path="res://block_like/block_like_2d_manager.tscn" id="2_d3nqk"]
 [ext_resource type="PackedScene" uid="uid://ce2ll6t0o6kac" path="res://block_like/production_line_2d/production_line.tscn" id="2_frdb5"]
 
 [node name="Main" type="Node2D"]
 
-[node name="Camera2D" type="Camera2D" parent="."]
+[node name="MainCamera" type="Camera2D" parent="."]
 script = ExtResource("1_6fceo")
 
-[node name="ProductionLine" parent="." instance=ExtResource("2_frdb5")]
+[node name="BlockLike2DManager" parent="." instance=ExtResource("2_d3nqk")]
 
-[node name="ProductionLine2" parent="." instance=ExtResource("2_frdb5")]
+[node name="ProductionLine4" parent="BlockLike2DManager" instance=ExtResource("2_frdb5")]
+
+[node name="ProductionLine5" parent="BlockLike2DManager" instance=ExtResource("2_frdb5")]
 position = Vector2(-47, 18)
 
-[node name="ProductionLine3" parent="." instance=ExtResource("2_frdb5")]
+[node name="ProductionLine6" parent="BlockLike2DManager" instance=ExtResource("2_frdb5")]
 position = Vector2(16, 16)

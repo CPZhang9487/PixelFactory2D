@@ -4,6 +4,7 @@ const UPDATE_SPEED = 3.0
 
 @onready var image: Sprite2D = $Image
 
+@warning_ignore("unused_parameter")
 func _process(delta):
 	_animate()
 
