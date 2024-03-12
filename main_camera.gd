@@ -1,7 +1,16 @@
 extends Camera2D
+"
+const:
+	- SPEED (float):
+		移動的速度。
+	- ZOOM_POWER (float):
+		縮放的力度。
+"
 
-const SPEED = 100
-const ZOOM_POWER = 1.2
+
+const SPEED := 100.0
+const ZOOM_POWER := 1.2
+
 
 func _physics_process(delta):
 	# position

@@ -1,12 +1,15 @@
 extends BlockLike2D
 
+
 const UPDATE_SPEED = 3.0
+
 
 @onready var image: Sprite2D = $Image
 
-@warning_ignore("unused_parameter")
+
 func _process(delta):
 	_animate()
 
+
 func _animate():
-	image.frame_coords.x = int(Time.get_ticks_msec() * BLOCK_SIZE * UPDATE_SPEED / 1000) % image.hframes
+	image.frame_coords.x = int(Time.get_ticks_msec() * UPDATE_SPEED / 1000) % image.hframes

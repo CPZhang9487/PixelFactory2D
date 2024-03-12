@@ -12,9 +12,3 @@ script = ExtResource("1_6fceo")
 [node name="BlockLike2DManager" parent="." instance=ExtResource("2_d3nqk")]
 
 [node name="ProductionLine4" parent="BlockLike2DManager" instance=ExtResource("2_frdb5")]
-
-[node name="ProductionLine5" parent="BlockLike2DManager" instance=ExtResource("2_frdb5")]
-position = Vector2(-47, 18)
-
-[node name="ProductionLine6" parent="BlockLike2DManager" instance=ExtResource("2_frdb5")]
-position = Vector2(16, 16)
