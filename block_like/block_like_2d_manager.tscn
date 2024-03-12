@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://dvfl3q1pi8r7g"]
-
-[ext_resource type="Script" path="res://block_like/block_like_2d_manager.gd" id="1_74m7q"]
-
-[node name="BlockLike2DManager" type="Node2D"]
-script = ExtResource("1_74m7q")

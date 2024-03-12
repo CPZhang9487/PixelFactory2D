@@ -1,6 +1,6 @@
 extends Camera2D
 "
-const:
+consts:
 	- SPEED (float):
 		移動的速度。
 	- ZOOM_POWER (float):

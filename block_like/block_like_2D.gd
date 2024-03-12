@@ -1,20 +1,39 @@
 class_name BlockLike2D
 extends Node2D
 "
+enums:
+	- Shape:
+		代表形狀連續相連的格子數量。
+		用法參考block_shape。
+
 exports:
 	- block_size (Vector2):
-		自身的大小，預設為Vector2(1, 1)。
+		自身的大小，預設為Vector2(1,1)。
+		用法參考block_shape。
+	- block_shape (Array[Shape]):
+		自身的形狀，預設為[ONE]。
+		以建立一個5x5的X形狀來作例子，1/0分別代表是否占用格子。
+		[[1,0,0,0,1],
+		 [0,1,0,1,0],
+		 [0,0,1,0,0],
+		 [0,1,0,1,0],
+		 [1,0,0,0,1],]
+		則應使block_size=Vector2(5,5)。
+		接著將二維陣列轉為一維來看，從左至右，從上至下。
+		[1,0,0,0,1,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0,1,0,0,0,1]
+		block_shape依照連續的1/0填入Shape。
+		block_shape=[ONE,NULL3,ONE,NULL1,ONE,NULL1,ONE,NULL3,ONE,NULL3,ONE,NULL1,ONE,NULL1,ONE,NULL3,ONE]
 
 public attributes:
-	- block_area (Area2D):
+	- block_area(Area2D):
 		覆蓋自身範圍的Area2d物件。
 		在'BLOCK_AREA'群組中。
 	- block_selected_flash_speed (float):
 		被選擇時的閃爍速度。
-		若父節點為BlockLike2DManager，則會根據父節點的block_selected_flash_speed進行動態調整。
+		進入父節點時若父節點為BlockLike2DManager，則會根據父節點的block_selected_flash_speed進行調整。
 	- cell_size (Vector2):
 		格子大小。
-		若父節點為BlockLike2DManager，則會根據父節點的cell_size進行動態調整。
+		進入父節點時若父節點為BlockLike2DManager，則會根據父節點的cell_size進行調整。
 	- is_able_to_be_placed (bool):
 		是否能夠被放置。
 	- is_mouse_entered (bool):
@@ -29,15 +48,15 @@ public attributes:
 		被撿起時的自身位置。
 
 public functions:
-	- be_picked_up():
+	- be_picked_up() -> void:
 		直接看函數本身比較快。
-	- be_putted_down():
+	- be_putted_down() -> void:
 		直接看函數本身比較快。
-	- be_selected():
+	- be_selected() -> void:
 		直接看函數本身比較快。
-	- be_unpicked_up():
+	- be_unpicked_up() -> void:
 		直接看函數本身比較快。
-	- be_unselected():
+	- be_unselected() -> void:
 		直接看函數本身比較快。
 	- locate(cell_size: Vector2) -> void:
 		依照cell_size定位自身的position。
@@ -61,7 +80,10 @@ protected functions:
 		自身的is_mouse_entered=false。
 "
 enum Shape {
-	NULL,
+	NULL1,
+	NULL2,
+	NULL3,
+	NULL4,
 	ONE,
 	TWO,
 	THREE,
@@ -83,13 +105,44 @@ var picked_up_global_mouse_pos: Vector2
 var picked_up_position: Vector2
 
 
-func _ready():
+func _ready() -> void:
+	# parent
+	var parent := get_parent()
+	if parent is BlockLike2DManager:
+		block_selected_flash_speed = parent.block_selected_flash_speed
+		cell_size = parent.cell_size
+	
+	# shape
+	var bool_shape_2d: Array[Array] = []
+	var x: int = block_size.x
+	var y: int = block_size.y
+	for i in range(y):
+		var bool_shape_1d: Array[bool] = []
+		for j in range(x):
+			bool_shape_1d.append(false)
+		bool_shape_2d.append(bool_shape_1d)
+	var index: int = 0
+	for shape in block_shape:
+		var length = shape - Shape.NULL1
+		var bool_value: bool = false
+		if length >= 4:
+			length -= 4
+			bool_value = true
+		while length >= 0 and index < x * y:
+			bool_shape_2d[index / x][index % x] = bool_value
+			length -= 1
+			index += 1
+	
 	# block_area
 	var rect = RectangleShape2D.new()
-	rect.size = block_size * cell_size - Vector2(0.001, 0.001)
-	var collision_shape = CollisionShape2D.new()
-	collision_shape.shape = rect
-	block_area.add_child(collision_shape)
+	rect.size = cell_size - Vector2(0.001, 0.001)
+	for i in range(y):
+		for j in range(x):
+			if bool_shape_2d[j][i]:
+				var collision_shape = CollisionShape2D.new()
+				collision_shape.shape = rect
+				collision_shape.position = -cell_size * (block_size - Vector2(1, 1)) / 2 + Vector2(i, j) * cell_size
+				block_area.add_child(collision_shape)
 	block_area.add_to_group("BLOCK_AREA")
 	block_area.area_entered.connect(_on_block_area_area_entered)
 	block_area.area_exited.connect(_on_block_area_area_exited)
@@ -98,7 +151,29 @@ func _ready():
 	add_child(block_area)
 
 
-func be_picked_up():
+func _physics_process(delta: float):
+	if Input.is_action_just_released("mouse_left"):
+		if is_picked_up:
+			be_putted_down()
+		elif is_mouse_entered and not is_selected:
+			be_selected()
+		elif is_mouse_entered or not Input.is_key_pressed(KEY_CTRL):
+			be_unselected()
+
+	if Input.is_action_just_released("mouse_right"):
+		if is_picked_up:
+			be_unpicked_up()
+		else:
+			be_picked_up()
+
+	if is_picked_up:
+		position = picked_up_position + get_global_mouse_position() - picked_up_global_mouse_pos
+	
+	locate()
+	update_modulate()
+
+
+func be_picked_up() -> void:
 	if is_picked_up:
 		return
 	if not is_selected:
@@ -109,7 +184,7 @@ func be_picked_up():
 	picked_up_position = position
 
 
-func be_putted_down():
+func be_putted_down() -> void:
 	if not is_able_to_be_placed:
 		return
 	if not is_picked_up:
@@ -121,14 +196,16 @@ func be_putted_down():
 	is_selected = false
 
 
-func be_selected():
+func be_selected() -> void:
+	if not is_able_to_be_placed:
+		return
 	if is_selected:
 		return
 	
 	is_selected = true
 
 
-func be_unpicked_up():
+func be_unpicked_up() -> void:
 	if not is_picked_up:
 		return
 	
@@ -136,7 +213,7 @@ func be_unpicked_up():
 	position = picked_up_position
 
 
-func be_unselected():
+func be_unselected() -> void:
 	if is_picked_up:
 		return
 	if not is_selected:
@@ -172,7 +249,7 @@ func update_modulate() -> void:
 	2. 當not is_selected時return。
 	3. 透過modulate的alpha隨著遊戲時間改變做出閃爍的效果。
 	4. 當not is_picked_up時return。
-	5. 透過is_able_to_be_placed調整modulate為綠色或紅色。
+	5. 根據is_able_to_be_placed調整modulate為綠色或紅色。
 	"
 	
 	"1."
