@@ -2,14 +2,14 @@ class_name BlockLike2D
 extends Node2D
 "
 enums:
-	- Shape:
+	- ShapeFill:
 		代表形狀連續相連的格子數量。
 		用法參考block_shape。
 
 exports:
-	- block_size (Vector2):
-		自身的大小，預設為Vector2(1,1)。
-		用法參考block_shape。
+	- block_selected_flash_speed (float):
+		被選擇時的閃爍速度,預設為1.0。
+		進入父節點時若父節點為BlockLike2DManager，則會根據父節點的block_selected_flash_speed進行調整。
 	- block_shape (Array[Shape]):
 		自身的形狀，預設為[ONE]。
 		以建立一個5x5的X形狀來作例子，1/0分別代表是否占用格子。
@@ -23,17 +23,20 @@ exports:
 		[1,0,0,0,1,0,1,0,1,0,0,0,1,0,0,0,1,0,1,0,1,0,0,0,1]
 		block_shape依照連續的1/0填入Shape。
 		block_shape=[ONE,NULL3,ONE,NULL1,ONE,NULL1,ONE,NULL3,ONE,NULL3,ONE,NULL1,ONE,NULL1,ONE,NULL3,ONE]
+	- block_size (Vector2):
+		自身的大小，預設為Vector2(1,1)。
+		用法參考block_shape。
+	- cell_size (Vector2):
+		格子大小，預設為Vector2(16,16)。
+		進入父節點時若父節點為BlockLike2DManager，則會根據父節點的cell_size進行調整。
+	- mouse_entered_modulate_alpha (float):
+		滑鼠進入自身時自身透明度應調整的值，只能設置在0.0到1.0之間，預設為0.8。
+		進入父節點時若父節點為BlockLike2DManager，則會根據父節點的mouse_entered_modulate_alpha進行調整。
 
 public attributes:
 	- block_area(Area2D):
 		覆蓋自身範圍的Area2d物件。
 		在'BLOCK_AREA'群組中。
-	- block_selected_flash_speed (float):
-		被選擇時的閃爍速度。
-		進入父節點時若父節點為BlockLike2DManager，則會根據父節點的block_selected_flash_speed進行調整。
-	- cell_size (Vector2):
-		格子大小。
-		進入父節點時若父節點為BlockLike2DManager，則會根據父節點的cell_size進行調整。
 	- is_able_to_be_placed (bool):
 		是否能夠被放置。
 	- is_mouse_entered (bool):
@@ -79,7 +82,7 @@ protected functions:
 		透過自身信號mouse_exited()觸發。
 		自身的is_mouse_entered=false。
 "
-enum Shape {
+enum ShapeFill {
 	NULL1,
 	NULL2,
 	NULL3,
@@ -91,12 +94,13 @@ enum Shape {
 }
 
 
+@export var block_selected_flash_speed := 1.0
+@export var block_shape: Array[ShapeFill] = [ShapeFill.ONE]
 @export var block_size := Vector2(1, 1)
-@export var block_shape: Array[Shape] = [Shape.ONE]
+@export var cell_size := Vector2(16, 16)
+@export_range(0.0, 1.0) var mouse_entered_modulate_alpha := 0.8
 
 var block_area := Area2D.new()
-var block_selected_flash_speed := 1.0
-var cell_size := Vector2(16, 16)
 var is_able_to_be_placed := true
 var is_mouse_entered := false
 var is_picked_up := false
@@ -111,37 +115,67 @@ func _ready() -> void:
 	if parent is BlockLike2DManager:
 		block_selected_flash_speed = parent.block_selected_flash_speed
 		cell_size = parent.cell_size
+		mouse_entered_modulate_alpha = parent.mouse_entered_modulate_alpha
 	
 	# shape
 	var bool_shape_2d: Array[Array] = []
-	var x: int = block_size.x
-	var y: int = block_size.y
+	var x: int = block_size.x if block_size.x > 0 else 1
+	var y: int = block_size.y if block_size.y > 0 else 1
 	for i in range(y):
 		var bool_shape_1d: Array[bool] = []
 		for j in range(x):
 			bool_shape_1d.append(false)
 		bool_shape_2d.append(bool_shape_1d)
-	var index: int = 0
+	var index := 0
+	var max_x := 0
+	var max_y := 0
+	var min_x := x - 1
+	var min_y := y - 1
 	for shape in block_shape:
-		var length = shape - Shape.NULL1
+		var length = shape - ShapeFill.NULL1
 		var bool_value: bool = false
 		if length >= 4:
 			length -= 4
 			bool_value = true
 		while length >= 0 and index < x * y:
-			bool_shape_2d[index / x][index % x] = bool_value
+			var i = index / x
+			var j = index % x
+			bool_shape_2d[i][j] = bool_value
+			if bool_value:
+				if i > max_y:
+					max_y = i
+				elif i < min_y:
+					min_y = i
+				if j > max_x:
+					max_x = j
+				elif j < min_x:
+					min_x = j
 			length -= 1
 			index += 1
+	for i in range(y):
+		for j in range(min_x):
+			bool_shape_2d[i].pop_front()
+		for j in range(x - max_x - 1):
+			bool_shape_2d[i].pop_back()
+	for i in range(min_y):
+		bool_shape_2d.pop_front()
+	for i in range(y - max_y - 1):
+		bool_shape_2d.pop_back()
+	x = max_x - min_x + 1
+	y = max_y - min_y + 1
+	if x == 1 and y == 1:
+		bool_shape_2d[0][0] = true
+	block_size = Vector2(x, y)
 	
 	# block_area
 	var rect = RectangleShape2D.new()
 	rect.size = cell_size - Vector2(0.001, 0.001)
 	for i in range(y):
 		for j in range(x):
-			if bool_shape_2d[j][i]:
+			if bool_shape_2d[i][j]:
 				var collision_shape = CollisionShape2D.new()
 				collision_shape.shape = rect
-				collision_shape.position = -cell_size * (block_size - Vector2(1, 1)) / 2 + Vector2(i, j) * cell_size
+				collision_shape.position = -cell_size * (block_size - Vector2(1, 1)) / 2 + Vector2(j, i) * cell_size
 				block_area.add_child(collision_shape)
 	block_area.add_to_group("BLOCK_AREA")
 	block_area.area_entered.connect(_on_block_area_area_entered)
@@ -182,6 +216,7 @@ func be_picked_up() -> void:
 	is_picked_up = true
 	picked_up_global_mouse_pos = get_global_mouse_position()
 	picked_up_position = position
+	z_index += 100
 
 
 func be_putted_down() -> void:
@@ -194,6 +229,7 @@ func be_putted_down() -> void:
 	
 	is_picked_up = false
 	is_selected = false
+	z_index -= 100
 
 
 func be_selected() -> void:
@@ -211,6 +247,7 @@ func be_unpicked_up() -> void:
 	
 	is_picked_up = false
 	position = picked_up_position
+	z_index -= 100
 
 
 func be_unselected() -> void:
@@ -245,7 +282,7 @@ func locate() -> void:
 
 func update_modulate() -> void:
 	"
-	1. modulate預設為白色。
+	1. modulate預設為白色，如果滑鼠在自身上，改變modulate.a。
 	2. 當not is_selected時return。
 	3. 透過modulate的alpha隨著遊戲時間改變做出閃爍的效果。
 	4. 當not is_picked_up時return。
@@ -254,6 +291,8 @@ func update_modulate() -> void:
 	
 	"1."
 	modulate = Color.WHITE
+	if is_mouse_entered:
+		modulate.a = mouse_entered_modulate_alpha
 	
 	"2."
 	if not is_selected:
